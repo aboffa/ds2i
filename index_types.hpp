@@ -18,17 +18,17 @@ namespace ds2i {
     typedef freq_index<compact_elias_fano,
                        positive_sequence<strict_elias_fano>> ef_index;
 
-    typedef freq_index<indexed_sequence,
+    typedef freq_index<indexed_sequence<>,
                        positive_sequence<>> single_index;
 
     typedef freq_index<
         uniform_partitioned_sequence<>,
-        positive_sequence<uniform_partitioned_sequence<strict_sequence>>
+        positive_sequence<uniform_partitioned_sequence<0, strict_sequence>>
         > uniform_index;
 
     typedef freq_index<
         partitioned_sequence<>,
-        positive_sequence<partitioned_sequence<strict_sequence>>
+        positive_sequence<partitioned_sequence<0, strict_sequence>>
         > opt_index;
 
     typedef block_freq_index<ds2i::optpfor_block> block_optpfor_index;

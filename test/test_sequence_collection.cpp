@@ -47,7 +47,10 @@ void test_sequence_collection()
 
 BOOST_AUTO_TEST_CASE(sequence_collection)
 {
-    test_sequence_collection<ds2i::indexed_sequence>();
-    test_sequence_collection<ds2i::partitioned_sequence<>>();
-    test_sequence_collection<ds2i::uniform_partitioned_sequence<>>();
+    test_sequence_collection<ds2i::indexed_sequence<0>>();
+    test_sequence_collection<ds2i::indexed_sequence<1>>();
+    test_sequence_collection<ds2i::partitioned_sequence<0,ds2i::indexed_sequence<>>>();
+    test_sequence_collection<ds2i::partitioned_sequence<1,ds2i::indexed_sequence<>>>();
+    test_sequence_collection<ds2i::uniform_partitioned_sequence<0,ds2i::indexed_sequence<>>>();
+    test_sequence_collection<ds2i::uniform_partitioned_sequence<1,ds2i::indexed_sequence<>>>();
 }

@@ -10,7 +10,7 @@
 
 namespace ds2i {
 
-    template <typename BaseSequence = indexed_sequence>
+    template <uint8_t hybrid = 1, typename BaseSequence = indexed_sequence<hybrid>>
     struct uniform_partitioned_sequence {
 
         typedef BaseSequence base_sequence_type;

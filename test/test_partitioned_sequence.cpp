@@ -42,12 +42,12 @@ namespace ds2i {
     };
 }
 
-template <typename BaseSequence>
+template <uint8_t hybrid, typename BaseSequence>
 void test_partitioned_sequence(uint64_t universe,
                                std::vector<uint64_t> const& seq)
 {
     ds2i::global_parameters params;
-    typedef ds2i::partitioned_sequence<BaseSequence> sequence_type;
+    typedef ds2i::partitioned_sequence<hybrid, BaseSequence> sequence_type;
 
     succinct::bit_vector_builder bvb;
     sequence_type::write(bvb, seq.begin(), universe, seq.size(), params);
@@ -73,8 +73,9 @@ BOOST_AUTO_TEST_CASE(partitioned_sequence)
             seq.push_back(v);
         }
         uint64_t universe = seq.back() + 1;
-        test_partitioned_sequence<indexed_sequence>(universe, seq);
-        test_partitioned_sequence<strict_sequence>(universe, seq);
+        test_partitioned_sequence<0, indexed_sequence<0>>(universe, seq);
+        test_partitioned_sequence<1, indexed_sequence<1>>(universe, seq);
+        test_partitioned_sequence<0, strict_sequence>(universe, seq);
         return;
     }
 
@@ -82,11 +83,13 @@ BOOST_AUTO_TEST_CASE(partitioned_sequence)
     {
         std::vector<uint64_t> seq;
         seq.push_back(0);
-        test_partitioned_sequence<indexed_sequence>(1, seq);
-        test_partitioned_sequence<strict_sequence>(1, seq);
+        test_partitioned_sequence<0, indexed_sequence<0>>(1, seq);
+        test_partitioned_sequence<1, indexed_sequence<1>>(1, seq);
+        test_partitioned_sequence<0, strict_sequence>(1, seq);
         seq[0] = 1;
-        test_partitioned_sequence<indexed_sequence>(2, seq);
-        test_partitioned_sequence<strict_sequence>(2, seq);
+        test_partitioned_sequence<0, indexed_sequence<0>>(2, seq);
+        test_partitioned_sequence<1, indexed_sequence<1>>(2, seq);
+        test_partitioned_sequence<0,strict_sequence>(2, seq);
     }
 
     std::vector<double> avg_gaps = { 1.1, 1.9, 2.5, 3, 4, 5, 10 };
@@ -94,8 +97,9 @@ BOOST_AUTO_TEST_CASE(partitioned_sequence)
         uint64_t n = 10000;
         uint64_t universe = uint64_t(n * avg_gap);
         auto seq = random_sequence(universe, n, true);
-        test_partitioned_sequence<indexed_sequence>(universe, seq);
-        test_partitioned_sequence<strict_sequence>(universe, seq);
+        test_partitioned_sequence<0, indexed_sequence<0>>(universe, seq);
+        test_partitioned_sequence<1, indexed_sequence<1>>(universe, seq);
+        test_partitioned_sequence<0, strict_sequence>(universe, seq);
     }
 
     // test also short (singleton partition) sequences with large universe
@@ -104,8 +108,9 @@ BOOST_AUTO_TEST_CASE(partitioned_sequence)
         uint64_t initial_gap = rand() % 50000;
         auto short_seq = random_sequence(universe - initial_gap, i, true);
         for (auto& v: short_seq) v += initial_gap;
-        test_partitioned_sequence<indexed_sequence>(universe, short_seq);
-        test_partitioned_sequence<strict_sequence>(universe, short_seq);
+        test_partitioned_sequence<0, indexed_sequence<0>>(universe, short_seq);
+        test_partitioned_sequence<1, indexed_sequence<1>>(universe, short_seq);
+        test_partitioned_sequence<0, strict_sequence>(universe, short_seq);
     }
 
 }

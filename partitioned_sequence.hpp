@@ -12,20 +12,19 @@
 
 namespace ds2i {
 
-    template <typename BaseSequence = indexed_sequence>
+    template<uint8_t hybrid = 1, typename BaseSequence = indexed_sequence<hybrid>>
     struct partitioned_sequence {
 
         typedef BaseSequence base_sequence_type;
         typedef typename base_sequence_type::enumerator base_sequence_enumerator;
 
-        template <typename Iterator>
-        static void write(succinct::bit_vector_builder& bvb,
+        template<typename Iterator>
+        static void write(succinct::bit_vector_builder &bvb,
                           Iterator begin,
                           uint64_t universe, uint64_t n,
-                          global_parameters const& params)
-        {
+                          global_parameters const &params) {
             assert(n > 0);
-            auto const& conf = configuration::get();
+            auto const &conf = configuration::get();
 
             auto cost_fun = [&](uint64_t universe, uint64_t n) {
                 return base_sequence_type::bitsize(params, universe, n) + conf.fix_cost;
@@ -88,7 +87,7 @@ namespace ds2i {
                     assert(cur_partition.size() > 0);
                     base_sequence_type::write(bv_sequences, cur_partition.begin(),
                                               cur_partition.back() + 1,
-                                              cur_partition.size(), // XXX skip last one?
+                                              cur_partition.size(),
                                               params);
                     endpoints.push_back(bv_sequences.size());
                     upper_bounds.push_back(upper_bound);
@@ -124,17 +123,12 @@ namespace ds2i {
 
             typedef std::pair<uint64_t, uint64_t> value_type; // (position, value)
 
-            enumerator()
-            {}
+            enumerator() {}
 
-            enumerator(succinct::bit_vector const& bv, uint64_t offset,
+            enumerator(succinct::bit_vector const &bv, uint64_t offset,
                        uint64_t universe, uint64_t n,
-                       global_parameters const& params)
-                : m_params(params)
-                , m_size(n)
-                , m_universe(universe)
-                , m_bv(&bv)
-            {
+                       global_parameters const &params)
+                    : m_params(params), m_size(n), m_universe(universe), m_bv(&bv) {
                 succinct::bit_vector::enumerator it(bv, offset);
                 m_partitions = read_gamma_nonzero(it);
                 if (m_partitions == 1) {
@@ -151,7 +145,7 @@ namespace ds2i {
                     }
 
                     m_partition_enum = base_sequence_enumerator
-                        (*m_bv, it.position(), ub + 1, n, m_params);
+                            (*m_bv, it.position(), ub + 1, n, m_params);
 
                     m_cur_upper_bound = m_cur_base + ub;
                 } else {
@@ -181,8 +175,7 @@ namespace ds2i {
                 slow_move();
             }
 
-            value_type DS2I_ALWAYSINLINE move(uint64_t position)
-            {
+            value_type DS2I_ALWAYSINLINE move(uint64_t position) {
                 assert(position <= size());
                 m_position = position;
 
@@ -194,9 +187,8 @@ namespace ds2i {
                 return slow_move();
             }
 
-            // note: this is instantiated oly if BaseSequence has next_geq
-            value_type DS2I_ALWAYSINLINE next_geq(uint64_t lower_bound)
-            {
+            // note: this is instantiated only if BaseSequence has next_geq
+            value_type DS2I_ALWAYSINLINE next_geq(uint64_t lower_bound) {
                 if (DS2I_LIKELY(lower_bound >= m_cur_base && lower_bound <= m_cur_upper_bound)) {
                     auto val = m_partition_enum.next_geq(lower_bound - m_cur_base);
                     m_position = m_cur_begin + val.first;
@@ -205,8 +197,7 @@ namespace ds2i {
                 return slow_next_geq(lower_bound);
             }
 
-            value_type DS2I_ALWAYSINLINE next()
-            {
+            value_type DS2I_ALWAYSINLINE next() {
                 ++m_position;
 
                 if (DS2I_LIKELY(m_position < m_cur_end)) {
@@ -216,13 +207,11 @@ namespace ds2i {
                 return slow_next();
             }
 
-            uint64_t size() const
-            {
+            uint64_t size() const {
                 return m_size;
             }
 
-            uint64_t prev_value() const
-            {
+            uint64_t prev_value() const {
                 if (DS2I_UNLIKELY(m_position == m_cur_begin)) {
                     return m_cur_partition ? m_cur_base - 1 : 0;
                 } else {
@@ -230,8 +219,7 @@ namespace ds2i {
                 }
             }
 
-            uint64_t num_partitions() const
-            {
+            uint64_t num_partitions() const {
                 return m_partitions;
             }
 
@@ -244,12 +232,12 @@ namespace ds2i {
             // next(), causing the code to grow. Since next is called in very
             // tight loops, on microbenchmarks this causes an improvement of
             // about 3ns on my i7 3Ghz
-            value_type DS2I_NOINLINE slow_next()
-            {
+            value_type DS2I_NOINLINE slow_next() {
                 if (DS2I_UNLIKELY(m_position == m_size)) {
                     assert(m_cur_partition == m_partitions - 1);
                     auto val = m_partition_enum.next();
-                    assert(val.first == m_partition_enum.size()); (void)val;
+                    assert(val.first == m_partition_enum.size());
+                    (void) val;
                     return value_type(m_position, m_universe);
                 }
 
@@ -258,8 +246,7 @@ namespace ds2i {
                 return value_type(m_position, val);
             }
 
-            value_type DS2I_NOINLINE slow_move()
-            {
+            value_type DS2I_NOINLINE slow_move() {
                 if (m_position == size()) {
                     if (m_partitions > 1) {
                         switch_partition(m_partitions - 1);
@@ -273,8 +260,7 @@ namespace ds2i {
                 return value_type(m_position, val);
             }
 
-            value_type DS2I_NOINLINE slow_next_geq(uint64_t lower_bound)
-            {
+            value_type DS2I_NOINLINE slow_next_geq(uint64_t lower_bound) {
                 if (m_partitions == 1) {
                     if (lower_bound < m_cur_base) {
                         return move(0);
@@ -296,15 +282,14 @@ namespace ds2i {
                 return next_geq(lower_bound);
             }
 
-            void switch_partition(uint64_t partition)
-            {
+            void switch_partition(uint64_t partition) {
                 assert(m_partitions > 1);
 
                 uint64_t endpoint = partition
-                    ? (m_bv->get_word56(m_endpoints_offset +
-                                        (partition - 1) * m_endpoint_bits)
-                       & ((uint64_t(1) << m_endpoint_bits) - 1))
-                    : 0;
+                                    ? (m_bv->get_word56(m_endpoints_offset +
+                                                        (partition - 1) * m_endpoint_bits)
+                                       & ((uint64_t(1) << m_endpoint_bits) - 1))
+                                    : 0;
 
                 uint64_t partition_begin = m_sequences_offset + endpoint;
                 m_bv->data().prefetch(partition_begin / 64);
@@ -319,10 +304,10 @@ namespace ds2i {
                 m_cur_base = m_upper_bounds.prev_value() + (partition ? 1 : 0);
 
                 m_partition_enum = base_sequence_enumerator
-                    (*m_bv, partition_begin,
-                     m_cur_upper_bound - m_cur_base + 1,
-                     m_cur_end - m_cur_begin,
-                     m_params);
+                        (*m_bv, partition_begin,
+                         m_cur_upper_bound - m_cur_base + 1,
+                         m_cur_end - m_cur_begin,
+                         m_params);
             }
 
             global_parameters m_params;
@@ -340,7 +325,7 @@ namespace ds2i {
             uint64_t m_cur_base;
             uint64_t m_cur_upper_bound;
 
-            succinct::bit_vector const* m_bv;
+            succinct::bit_vector const *m_bv;
             compact_elias_fano::enumerator m_sizes;
             compact_elias_fano::enumerator m_upper_bounds;
             base_sequence_enumerator m_partition_enum;

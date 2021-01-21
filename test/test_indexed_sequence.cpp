@@ -16,6 +16,7 @@ BOOST_AUTO_TEST_CASE(indexed_sequence)
         uint64_t universe = uint64_t(n * avg_gap);
         auto seq = random_sequence(universe, n, true);
 
-        test_sequence(ds2i::indexed_sequence(), params, universe, seq);
+        test_sequence(ds2i::indexed_sequence<0>(), params, universe, seq);
+        test_sequence(ds2i::indexed_sequence<1>(), params, universe, seq);
     }
 }

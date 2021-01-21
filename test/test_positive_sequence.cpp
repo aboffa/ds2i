@@ -38,6 +38,6 @@ void test_positive_sequence()
 BOOST_AUTO_TEST_CASE(positive_sequence)
 {
     test_positive_sequence<ds2i::strict_sequence>();
-    test_positive_sequence<ds2i::partitioned_sequence<ds2i::strict_sequence>>();
-    test_positive_sequence<ds2i::uniform_partitioned_sequence<ds2i::strict_sequence>>();
+    test_positive_sequence<ds2i::partitioned_sequence<0, ds2i::strict_sequence>>();
+    test_positive_sequence<ds2i::uniform_partitioned_sequence<0, ds2i::strict_sequence>>();
 }

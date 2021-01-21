@@ -74,11 +74,11 @@ BOOST_AUTO_TEST_CASE(freq_index)
     using ds2i::partitioned_sequence;
     using ds2i::uniform_partitioned_sequence;
 
-    test_freq_index<indexed_sequence,
+    test_freq_index<indexed_sequence<>,
                     positive_sequence<>>();
 
     test_freq_index<partitioned_sequence<>,
-                    positive_sequence<partitioned_sequence<strict_sequence>>>();
+                    positive_sequence<partitioned_sequence<0,strict_sequence>>>();
     test_freq_index<uniform_partitioned_sequence<>,
-                    positive_sequence<uniform_partitioned_sequence<strict_sequence>>>();
+                    positive_sequence<uniform_partitioned_sequence<0,strict_sequence>>>();
 }
